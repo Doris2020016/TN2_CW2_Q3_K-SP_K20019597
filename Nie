@@ -1,0 +1,158 @@
+clear all;
+adjacency_matrix=zeros(12);                     %生成空邻接矩阵
+A=zeros(1,12);
+B=ones(12,1);
+J=0;
+while(J~=2)                                     %保证第一次失误后可以重新检测
+    K=1;
+    while(K~=13)                                %保证无孤立点
+        if(adjacency_matrix(K,:).*B==A)
+%生成符合要求的随机邻接矩阵
+%设初值
+            adjacency_matrix=zeros(12);
+            m=0;
+            n=0;
+%生成初始的m,n
+            while(m==n)                         %选一个不在对称线上的点
+                m=randi(12);
+                n=randi(m);
+            end
+            for i=1:18                          %随机赋值18次，代表18条链路
+                length=randi(10);               %链路长度
+                adjacency_matrix(m,n)=length;   %给对称的两个点赋值
+                adjacency_matrix(n,m)=length;
+                while(adjacency_matrix(m,n)~=0) %当该点不为0，说明已经赋值了，重新选点
+                    m=randi(12);
+                    n=randi(m);
+                    while(m==n)%选一个不在对称线上的点
+                        m=randi(12);
+                        n=randi(m);
+                    end
+                end
+            end
+            J=0;                                %将J归零
+            K=0;
+        end
+        K=K+1;
+    end
+    J=J+1;
+end
+node_names = {'1','2','3','4','5','6','7','8','9','10','11','12'};
+G = graph(adjacency_matrix,node_names);
+figure(1)
+plot (G);
+
+
+DG=sparse(adjacency_matrix);
+first = input('Start at: Node ');
+last = input('Destination: Node ');
+% 有向赋权图的绘制
+h = view(biograph(DG,[],'ShowWeights','on'));
+[dist,path,pred] = graphshortestpath(DG,first,last);
+% 标记路线经过的节点
+set(h.Nodes(path),'Color',[0.2 0.6 0.6]);
+% 标记路线经过的路径
+edges = getedgesbynodeid(h,get(h.Nodes(path),'ID'),get(h.Nodes(path),'ID'));
+set(edges,'LineColor',[0.6 0.2 0.2]);
+set(edges,'LineWidth',2.0);
+
+fprintf('The shortest distance is: %d\n',dist);
+fprintf('The nodes of path are:');
+disp(path);
+
+
+[r,z]=size(path);%统计行列数
+
+Y=adjacency_matrix;%备份矩阵
+
+dist_all=zeros(100,100);
+path_all=zeros(100,100);
+
+for u=1:z-1
+    
+    %fprintf('U= %d',u);
+    adjacency_matrix(path(1,u),path(1,u+1))=0;
+    adjacency_matrix(path(1,u+1),path(1,u))=0;
+    %fprintf('%d, %d',adjacency_matrix(path(1,u),path(1,u+1)),adjacency_matrix(path(1,u+1),path(1,u)));
+    G = graph(adjacency_matrix,node_names);
+    
+    DG=sparse(adjacency_matrix);
+    % 有向赋权图的绘制
+    %h = view(biograph(DG,[],'ShowWeights','on'));
+    [dist,path1,pred] = graphshortestpath(DG,first,last);
+    % 标记路线经过的节点
+    %set(h.Nodes(path),'Color',[0.2 0.6 0.6]);
+    % 标记路线经过的路径
+    %edges = getedgesbynodeid(h,get(h.Nodes(path),'ID'),get(h.Nodes(path),'ID'));
+    %set(edges,'LineColor',[0.6 0.2 0.2]);
+    %set(edges,'LineWidth',2.0);
+    dist_all(1,u)=dist;
+    [r1,z1]=size(path1);%统计行列数
+    %fprintf('The nodes of path are:');
+    %disp(path1);
+    for g=1:z1
+        path_all(u,g)=path1(1,g);
+    end
+    adjacency_matrix=Y;%备份矩阵
+end
+
+dist_show=dist_all;
+path_show=path_all;
+path_all=path_all.';
+H=path_all;
+H(1,:)=0;
+for f=1:99
+    H(f+1,:)=path_all(f,:);
+end
+dist_all=dist_all+H;
+UU=H;
+PP=dist_all;
+H=dist_all;
+W=H;
+E=H;
+for w=1:99
+    for t=1:99
+        if (H(1,t+1)~=0)
+                A=H(1,t+1);
+                B=H(1,t);
+                if (A<B)
+                    E=H;
+                    H(1,t)=H(1,t+1);
+                    H(1,t+1)=E(t);
+                    for v=1:99
+                        H(v,t)=H(v,t+1);
+                        H(v,t+1)=E(v,t);
+                    end
+                    E=H;
+                end
+        end
+    end
+end
+
+if (H(1,1)~=0 && H(2,1)~=0)
+   Sec=H(1,1);
+   Thi=H(1,2);
+   for kk=1:99
+        if(H(kk+1,1)~=0)
+            Sec_path(1,kk)=H(kk+1,1);
+            if H(kk+1,2)~=0
+               Thi_path(1,kk)=H(kk+1,2);
+            end
+        end
+   end
+else
+    Sec=0;
+    Sec_path=0;
+    Thi=0;
+    Thi_path=0;
+end
+
+fprintf('The second shortest distance is: %d\n',Sec);
+fprintf('The nodes of path are:');
+disp(Sec_path);
+fprintf('The third shortest distance is: %d\n',Thi);
+fprintf('The nodes of path are:');
+disp(Thi_path);
+
+
+
