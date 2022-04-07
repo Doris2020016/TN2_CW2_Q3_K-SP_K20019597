@@ -1,101 +1,72 @@
 clear all;
-adjacency_matrix=zeros(12);                     %生成空邻接矩阵
+adjacency_matrix=zeros(12);                         %Generate empty adjacency matrix
 A=zeros(1,12);
 B=ones(12,1);
 J=0;
-while(J~=2)                                     %保证第一次失误后可以重新检测
+while(J~=2)                                         %Guaranteed to be retested after the first error
     K=1;
-    while(K~=13)                                %保证无孤立点
-        if(adjacency_matrix(K,:).*B==A)
-%生成符合要求的随机邻接矩阵
-%设初值
+    while(K~=13)                                    %Guaranteed no outliers
+        if(adjacency_matrix(K,:).*B==A)             %Ensure that no outliers generate a random adjacency matrix that meets the requirements
             adjacency_matrix=zeros(12);
-            m=0;
+            m=0;                                    %set initial value
             n=0;
-%生成初始的m,n
-            while(m==n)                         %选一个不在对称线上的点
+            while(m==n)                             %Set the initial value to generate initial random m, n, and select a point that is not on the symmetry line
                 m=randi(12);
                 n=randi(m);
             end
-            for i=1:18                          %随机赋值18次，代表18条链路
-                length=randi(10);               %链路长度
-                adjacency_matrix(m,n)=length;   %给对称的两个点赋值
+            for i=1:18                              %18 random assignments, representing 18 links
+                length=randi(10);%link length
+                adjacency_matrix(m,n)=length;       %Assign values to two symmetrical points
                 adjacency_matrix(n,m)=length;
-                while(adjacency_matrix(m,n)~=0) %当该点不为0，说明已经赋值了，重新选点
+                while(adjacency_matrix(m,n)~=0)     %When the point is not 0, it means that the value has been assigned, and the point is re-selected
                     m=randi(12);
                     n=randi(m);
-                    while(m==n)%选一个不在对称线上的点
+                        while(m==n)                 %Pick a point that is not on the symmetry line
                         m=randi(12);
                         n=randi(m);
                     end
                 end
             end
-            J=0;                                %将J归零
+            J=0;                                    %Zero out J
             K=0;
         end
         K=K+1;
     end
     J=J+1;
 end
-node_names = {'1','2','3','4','5','6','7','8','9','10','11','12'};
+nodes_names= {'1','2','3','4','5','6','7','8','9','10','11','12'};
 G = graph(adjacency_matrix,node_names);
 figure(1)
 plot (G);
-
-
 DG=sparse(adjacency_matrix);
 first = input('Start at: Node ');
 last = input('Destination: Node ');
-% 有向赋权图的绘制
-h = view(biograph(DG,[],'ShowWeights','on'));
-[dist,path,pred] = graphshortestpath(DG,first,last);
-% 标记路线经过的节点
-set(h.Nodes(path),'Color',[0.2 0.6 0.6]);
-% 标记路线经过的路径
-edges = getedgesbynodeid(h,get(h.Nodes(path),'ID'),get(h.Nodes(path),'ID'));
+h = view(biograph(DG,[],'ShowWeights','on'));       %Drawing of Directed Weighted Graphs 
+[dist,path,pred]=graphshortestpath(DG,first,last);
+set(h.Nodes(path),'Color',[0.2 0.6 0.6]);           %Mark the nodes the route passes through 
+edges=getedgesbynodeid(h,get(h.Nodes(path),'ID'),get(h.Nodes(path),'ID'));      %Mark the path the route travels through 
 set(edges,'LineColor',[0.6 0.2 0.2]);
 set(edges,'LineWidth',2.0);
-
 fprintf('The shortest distance is: %d\n',dist);
 fprintf('The nodes of path are:');
 disp(path);
-
-
-[r,z]=size(path);%统计行列数
-
-Y=adjacency_matrix;%备份矩阵
-
+[r,z]=size(path);                                   %Count the number of rows and columns
+Y=adjacency_matrix;                                 %Backup matrix
 dist_all=zeros(100,100);
 path_all=zeros(100,100);
-
 for u=1:z-1
-    
-    %fprintf('U= %d',u);
     adjacency_matrix(path(1,u),path(1,u+1))=0;
     adjacency_matrix(path(1,u+1),path(1,u))=0;
-    %fprintf('%d, %d',adjacency_matrix(path(1,u),path(1,u+1)),adjacency_matrix(path(1,u+1),path(1,u)));
     G = graph(adjacency_matrix,node_names);
-    
     DG=sparse(adjacency_matrix);
-    % 有向赋权图的绘制
-    %h = view(biograph(DG,[],'ShowWeights','on'));
-    [dist,path1,pred] = graphshortestpath(DG,first,last);
-    % 标记路线经过的节点
-    %set(h.Nodes(path),'Color',[0.2 0.6 0.6]);
-    % 标记路线经过的路径
-    %edges = getedgesbynodeid(h,get(h.Nodes(path),'ID'),get(h.Nodes(path),'ID'));
-    %set(edges,'LineColor',[0.6 0.2 0.2]);
-    %set(edges,'LineWidth',2.0);
+    [dist,path1,pred]=graphshortestpath(DG,first,last);
     dist_all(1,u)=dist;
-    [r1,z1]=size(path1);%统计行列数
-    %fprintf('The nodes of path are:');
-    %disp(path1);
+    [r1,z1]=size(path1);                            %Count the number of rows and columns
     for g=1:z1
         path_all(u,g)=path1(1,g);
     end
-    adjacency_matrix=Y;%备份矩阵
+    adjacency_matrix=Y;                             %Backup matrix
 end
-
 dist_show=dist_all;
 path_show=path_all;
 path_all=path_all.';
@@ -113,46 +84,41 @@ E=H;
 for w=1:99
     for t=1:99
         if (H(1,t+1)~=0)
-                A=H(1,t+1);
-                B=H(1,t);
-                if (A<B)
-                    E=H;
-                    H(1,t)=H(1,t+1);
-                    H(1,t+1)=E(t);
-                    for v=1:99
-                        H(v,t)=H(v,t+1);
-                        H(v,t+1)=E(v,t);
-                    end
-                    E=H;
-                end
-        end
-    end
+            A=H(1,t+1);
+            B=H(1,t);
+            if (A<B)
+                E=H;
+             	H(1,t)=H(1,t+1);
+             	H(1,t+1)=E(t);
+                for v=1:99
+                    H(v,t)=H(v,t+1);
+                    H(v,t+1)=E(v,t);
+               	end
+                E=H;
+            end
+       	end
+   	end
 end
-
 if (H(1,1)~=0 && H(2,1)~=0)
-   Sec=H(1,1);
-   Thi=H(1,2);
-   for kk=1:99
+    Sec=H(1,1);
+	Thi=H(1,2);
+   	for kk=1:99
         if(H(kk+1,1)~=0)
             Sec_path(1,kk)=H(kk+1,1);
             if H(kk+1,2)~=0
-               Thi_path(1,kk)=H(kk+1,2);
-            end
-        end
-   end
+           		Thi_path(1,kk)=H(kk+1,2);
+           	end
+     	end
+ 	end
 else
     Sec=0;
     Sec_path=0;
     Thi=0;
     Thi_path=0;
 end
-
-fprintf('The second shortest distance is: %d\n',Sec);
+fprintf('The second shortest distance is: %d\n',Sec);           %Show
 fprintf('The nodes of path are:');
 disp(Sec_path);
 fprintf('The third shortest distance is: %d\n',Thi);
 fprintf('The nodes of path are:');
 disp(Thi_path);
-
-
-
