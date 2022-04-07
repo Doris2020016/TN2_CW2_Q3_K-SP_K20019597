@@ -12,7 +12,7 @@ while(J~=2)                                         %Guaranteed to be retested a
             n=0;
             while(m==n)                             %Set the initial value to generate initial random m, n, and select a point that is not on the symmetry line
                 m=randi(12);
-                n=randi(m);
+                n=randi(12);
             end
             for i=1:18                              %18 random assignments, representing 18 links
                 length=randi(10);%link length
@@ -20,10 +20,10 @@ while(J~=2)                                         %Guaranteed to be retested a
                 adjacency_matrix(n,m)=length;
                 while(adjacency_matrix(m,n)~=0)     %When the point is not 0, it means that the value has been assigned, and the point is re-selected
                     m=randi(12);
-                    n=randi(m);
+                    n=randi(12);
                         while(m==n)                 %Pick a point that is not on the symmetry line
                         m=randi(12);
-                        n=randi(m);
+                        n=randi(12);
                     end
                 end
             end
